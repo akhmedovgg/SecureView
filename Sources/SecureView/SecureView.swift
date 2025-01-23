@@ -82,6 +82,7 @@ public final class SecureView<ScreenView: UIView, ScreenshotView: UIView>: UIVie
             fatalError("Unable to extract secured canvas view")
         }
         canvasView.subviews.forEach { $0.removeFromSuperview() }
+        canvasView.isUserInteractionEnabled = true
         self.canvasView = canvasView
         
     }
