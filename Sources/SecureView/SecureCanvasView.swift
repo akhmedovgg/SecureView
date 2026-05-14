@@ -16,6 +16,11 @@ public struct SecureCanvasView<ScreenView: View, ScreenshotView: View>: UIViewRe
     /// Parameter that marks content as protected. If the value is `true`, when a user takes a screenshot, the `screenshotView` will be displayed instead of the `contentView`. Otherwise, the content will be visible in the screenshot instead of the `screenshotView`
     var isScreenshotDisabled: Binding<Bool>
     
+    public class Coordinator {
+        var screenHostingController: UIHostingController<ScreenView>?
+        var screenshotHostingController: UIHostingController<ScreenshotView>?
+    }
+    
     /// The view that will be visible on the user's screen of the device
     public var screenView: () -> ScreenView
     
@@ -39,21 +44,29 @@ public struct SecureCanvasView<ScreenView: View, ScreenshotView: View>: UIViewRe
         self.screenshotView = screenshotView
     }
     
+    public func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
     public func makeUIView(context: Context) -> SecureView<UIView, UIView> {
-        let contentView = UIHostingController(rootView: screenView())
-        let screenshotView = UIHostingController(rootView: screenshotView())
+        let screenHC = UIHostingController(rootView: screenView())
+        let screenshotHC = UIHostingController(rootView: screenshotView())
+        context.coordinator.screenHostingController = screenHC
+        context.coordinator.screenshotHostingController = screenshotHC
         return SecureView<UIView, UIView>(
-            contentView: contentView.view,
-            screenshotView: screenshotView.view,
+            contentView: screenHC.view,
+            screenshotView: screenshotHC.view,
             isScreenshotDisabled: isScreenshotDisabled.wrappedValue
         )
     }
     
     public func updateUIView(_ secureView: SecureView<UIView, UIView>, context: Context) {
+        context.coordinator.screenHostingController?.rootView = screenView()
+        context.coordinator.screenshotHostingController?.rootView = screenshotView()
         secureView.setScreenshotDisabled(isScreenshotDisabled.wrappedValue)
     }
 }
-
+ 
 #if DEBUG
 @available(iOS 17.0, *)
 #Preview {
